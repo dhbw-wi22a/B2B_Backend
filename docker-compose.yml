@@ -1,7 +1,7 @@
 services:
-  djangoweb:
+  web:
     build: .
-    container_name: djangoweb
+    container_name: django_app
     restart: always
     ports:
       - "8008:8000"
@@ -10,6 +10,8 @@ services:
     volumes:
       - media_data:/app/data/media    # Persist uploaded media files
       - static_data:/app/data/static  # Persist collected static files
+    depends_on:
+      - nginx
     healthcheck:  # Healthcheck to ensure the service is up
       test: ["CMD", "curl", "-f", "http://localhost/api/?format=json"]
       interval: 30s
