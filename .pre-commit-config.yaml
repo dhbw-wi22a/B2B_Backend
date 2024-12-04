@@ -1,0 +1,14 @@
+repos:
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.4.0  # Use the latest stable version
+    hooks:
+      - id: pyupgrade
+
+  - repo: local
+    hooks:
+      - id: validate-requirements
+        name: Ensure requirements are up-to-date
+        entry: pip-compile
+        language: system
+        files: requirements.in
+        pass_filenames: false  # Ensure pip-compile works without needing filenames passed

@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Environment variables
+.env
+.env.*
+
+# Database
+*.sqlite3
+/media
+
+# PyCharm files
+.idea/
+.venv/
+
+# Docker
+*.log
+*.pid
