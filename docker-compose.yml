@@ -29,6 +29,4 @@ services:
       - media_data:/app/data/media
       - static_data:/app/data/static
 
-volumes:
-  media_data:
-  static_data:
+volumes: { media_data:  , static_data: }
