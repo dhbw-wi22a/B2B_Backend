@@ -39,7 +39,7 @@ WORKDIR /app
 COPY --from=builder /install /usr/local
 
 # Copy application code from the builder stage
-COPY --from=builder /app /app
+COPY . /app/
 
 # Conditionally run development commands if DEBUG is true
 # Default is true; can be overridden at build time
@@ -57,8 +57,3 @@ EXPOSE 8000
 
 # Command to run the ASGI app with Uvicorn
 CMD ["uvicorn", "B2B_Backend.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--workers", "3"]
-
-
-FROM nginx:latest
-RUN apt-get update && apt-get install -y procps
-RUN mkdir -p /app/data/static && mkdir /app/data/media
