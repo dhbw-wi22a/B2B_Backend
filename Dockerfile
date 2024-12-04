@@ -56,7 +56,7 @@ RUN if [ "$DEBUG" = "true" ]; then \
 EXPOSE 8000
 
 # Command to run the ASGI app with Uvicorn
-CMD ["uvicorn", "B2B_Backend.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--workers", "3"]
+CMD ["uvicorn", "B2B_Backend.asgi:application", "--host", "0.0.0.0", "--port", "8001", "--workers", "3"]
 
 
 FROM nginx:latest
