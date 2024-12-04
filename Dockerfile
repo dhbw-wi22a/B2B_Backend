@@ -62,4 +62,3 @@ CMD ["uvicorn", "B2B_Backend.asgi:application", "--host", "0.0.0.0", "--port", "
 FROM nginx:latest
 RUN apt-get update && apt-get install -y procps
 RUN mkdir -p /app/data/static && mkdir /app/data/media
-RUN chmod -R 755 /app/data && chmod -R 755 /app/static
