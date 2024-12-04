@@ -1,7 +1,7 @@
 services:
   web:
     build: .
-    container_name: django_app
+    container_name: djangoweb
     restart: always
     ports:
       - "8008:8000"
