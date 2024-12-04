@@ -1,0 +1,35 @@
+services:
+  web:
+    build: .
+    container_name: django_app
+    restart: always
+    env_file:
+      - ${DJANGO_ENV_FILE:-.env.dev}  # Dynamically load .env.dev or .env.prod
+    volumes:
+      - db_data:/app/data/db          # Persist SQLite database file
+      - media_data:/app/data/media    # Persist uploaded media files
+      - static_data:/app/data/static  # Persist collected static files
+    depends_on:
+      - nginx
+    healthcheck:  # Healthcheck to ensure the service is up
+      test: ["CMD", "curl", "-f", "http://localhost/api/?format=json"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro  # Use the custom Nginx config
+      - media_data:/app/data/media
+      - static_data:/app/data/static
+
+
+volumes:
+  db_data:
+  media_data:
+  static_data:

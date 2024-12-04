@@ -3,16 +3,25 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+
+# Virtual environment
+.venv
+env/
+
+# Docker-related
+Dockerfile
+docker-compose.yml
+
+
+.git/*
+.gitignore
+
 # C extensions
 *.so
 
-# Environment variables
-.env
-.env.*
-
 # Database
-*.sqlite3
-/data/*
+/db/*.sqlite3
+/data/media/*
 
 # PyCharm files
 .idea/
