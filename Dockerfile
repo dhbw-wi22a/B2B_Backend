@@ -39,7 +39,7 @@ WORKDIR /app
 COPY --from=builder /install /usr/local
 
 # Copy application code from the builder stage
-COPY . /app/
+COPY --from=builder /app /app
 
 # Conditionally run development commands if DEBUG is true
 # Default is true; can be overridden at build time
