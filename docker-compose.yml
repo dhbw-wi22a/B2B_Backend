@@ -21,6 +21,8 @@ services:
       retries: 3
     networks:
         - app_net
+    depends_on:
+      - nginx
 
   nginx:
     image: nginx:latest
@@ -36,5 +38,6 @@ services:
       - app_net
 
 volumes:
+- db_data:
 - media_data:
 - static_data:
