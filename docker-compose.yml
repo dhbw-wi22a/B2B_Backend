@@ -38,6 +38,6 @@ services:
       - app_net
 
 volumes:
-- db_data:
-- media_data:
-- static_data:
+  db_data:
+  media_data:
+  static_data:
