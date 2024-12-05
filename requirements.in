@@ -2,4 +2,6 @@ django
 djangorestframework
 python-dotenv
 uvicorn
+gunicorn
 Pillow
+psycopg2-binary

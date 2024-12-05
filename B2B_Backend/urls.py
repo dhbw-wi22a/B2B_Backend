@@ -15,10 +15,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import path, include
 
+def default_view(request):
+    return HttpResponse("Hello, world! This is the default view.")
+
+
 urlpatterns = [
+    path('', default_view),
     path('admin/', admin.site.urls),
     path('api/', include('Webshop.urls')),  # Include app's URLs under /api/
+
 
 ]
