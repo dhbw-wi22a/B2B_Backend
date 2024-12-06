@@ -30,7 +30,11 @@ FROM python:3.10-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    DJANGO_DEBUG=${DJANGO_PREPARE_DB:-true} \
+    DJANGO_CREATE_DEFAULT_ADMIN=${DJANGO_CREATE_DEFAULT_ADMIN:-true} \
+    DJANGO_APP_HOST=${DJANGO_APP_HOST:-0.0.0.0}\
+    DJANGO_WORKERS=${DJANGO_WORKERS:-3}
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -41,19 +45,18 @@ COPY --from=builder /install /usr/local
 # Copy application code from the builder stage
 COPY . /app/
 
-# Conditionally run development commands if DEBUG is true
-# Default is true; can be overridden at build time
-ARG DEBUG=true
-
-RUN if [ "$DEBUG" = "true" ]; then \
+# Conditionally run development commands if DJANGO_PREPARE_DB is true
+RUN if [ "DJANGO_PREPARE_DB" = "true" ]; then \
         python manage.py collectstatic --noinput && \
         python manage.py makemigrations --noinput && \
         python manage.py migrate --noinput && \
-        python manage.py shell -c "from manage import create_default_admin; create_default_admin()"; \
+        if [ "$DJANGO_CREATE_DEFAULT_ADMIN" = "true" ]; then \
+            python manage.py shell -c "from manage import create_default_admin; create_default_admin()"; \
+        fi; \
     fi
 
 # Expose the port the application runs on
 EXPOSE 8000
 
 # Command to run the ASGI app with Uvicorn
-CMD ["uvicorn", "B2B_Backend.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--workers", "3"]
+CMD ["sh", "-c", "uvicorn B2B_Backend.asgi:application --host 0.0.0.0 --port 8000 --workers ${DJANGO_WORKERS}"]

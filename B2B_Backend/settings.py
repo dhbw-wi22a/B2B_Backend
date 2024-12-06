@@ -84,12 +84,12 @@ ASGI_APPLICATION = 'B2B_Backend.asgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'postgres'),
-        'USER': os.getenv('POSTGRES_USER', 'postgres'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'postgres'),
-        'HOST': os.getenv('POSTGRES_HOST', '5.75.130.54'),
-        'PORT': os.getenv('POSTGRES_PORT', '6666'),
+        'ENGINE': os.environ.get('DJANGO_DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.environ.get('DJANGO_DB_NAME', BASE_DIR / 'data' / 'db' / 'db.sqlite3'),
+        'USER': os.environ.get('DJANGO_DB_USER', ''),
+        'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD', ''),
+        'HOST': os.environ.get('DJANGO_DB_HOST', ''),
+        'PORT': os.environ.get('DJANGO_DB_PORT', ''),
     }
 }
 
@@ -117,9 +117,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = os.environ.get('DJANGO_LANGUAGE_CODE', 'en-us')
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = os.environ.get('DJANGO_TIME_ZONE', 'UTC')
 
 USE_I18N = True
 
