@@ -16,9 +16,15 @@ django==5.1.3
     #   djangorestframework
 djangorestframework==3.15.2
     # via -r requirements.in
+gunicorn==23.0.0
+    # via -r requirements.in
 h11==0.14.0
     # via uvicorn
+packaging==24.2
+    # via gunicorn
 pillow==11.0.0
+    # via -r requirements.in
+psycopg2-binary==2.9.10
     # via -r requirements.in
 python-dotenv==1.0.1
     # via -r requirements.in
