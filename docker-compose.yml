@@ -5,7 +5,7 @@ networks:
 services:
   django-app:
     build: .
-    container_name: django-app
+    container_name: ${DJANGO_CONTAINER_NAME:-django-app-test}
     restart: always
     env_file:
       - ${DJANGO_ENV_FILE:-.env.django.dev}  # Dynamically load .env.dev or .env.prod
@@ -25,7 +25,7 @@ services:
 
   nginx:
     image: nginx:latest
-    container_name: nginx
+    container_name: ${DJANGO_CONTAINER_NAME:-nginx-test}
     restart: always
     ports:
       - "${NGINX_PORT:-8001}:80"  # Map the Nginx port
