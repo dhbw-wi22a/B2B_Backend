@@ -20,12 +20,15 @@ docker-compose.yml
 *.so
 
 # Database
-/db/*.sqlite3
-/data/media/*
+/data/*
 
 # PyCharm files
 .idea/
 .venv/
+
+# Ignore Django migrations
+*/migrations/
+!*/migrations/__init__.py
 
 # Docker
 *.log

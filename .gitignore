@@ -10,12 +10,16 @@ __pycache__/
 .env.*.prod
 
 # Database
-*.sqlite3
 /data/*
 
 # PyCharm files
 .idea/
 .venv/
+
+# Ignore Django migrations
+*/migrations/
+!*/migrations/__init__.py
+
 
 # Docker
 *.log

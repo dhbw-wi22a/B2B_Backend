@@ -5,10 +5,10 @@ networks:
 services:
   django-app:
     build: .
-    container_name: ${DJANGO_CONTAINER_NAME:-django-app-test}
+    #container_name: ${DJANGO_CONTAINER_NAME:-django-app} # Disabled: Dokploy
     restart: always
     env_file:
-      - ${DJANGO_ENV_FILE:-.env.django.dev}  # Dynamically load .env.dev or .env.prod
+      - path: .env
     volumes:
       - db_data:/app/data/db          # Persist SQLite database file
       - media_data:/app/data/media    # Persist uploaded media files
@@ -16,27 +16,28 @@ services:
     networks:
         - app_net
     healthcheck:  # Healthcheck to ensure the service is up
-      test: ["CMD", "curl", "-f", "${DJANGO_HEALTH_CHECK_URL:-http://localhost:8000}"]
+      test: ["CMD", "curl", "-f", "http://django-app:8000"]
       interval: 30s
       timeout: 10s
       retries: 3
-    depends_on:
-      - nginx
+
 
   nginx:
     image: nginx:latest
-    container_name: ${DJANGO_CONTAINER_NAME:-nginx-test}
+    #container_name: ${NGINX_CONTAINER_NAME:-nginx-test} # Disabled: Dokploy
     restart: always
-    ports:
-      - "${NGINX_PORT:-8001}:80"  # Map the Nginx port
+    env_file:
+      - path: .env
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro            # Config file
       - media_data:/app/data/media                              # Media files directory
       - static_data:/app/data/static                            # Static files directory
-    env_file:
-      - ${NGINX_ENV_FILE:-.env.nginx.dev}  # Dynamically load .env.dev or .env.prod
     networks:
       - app_net
+    ports:
+      - ${NGINX_PORT:-8001}:80 # Map the Nginx port
+    depends_on:
+      - django-app
 
 volumes:
   db_data:

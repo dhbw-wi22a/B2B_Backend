@@ -14,22 +14,19 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Load environment variables from the .env file
-ENV_FILE = os.environ.get('DJANGO_ENV_FILE', '.env.dev')  # Default to .env.dev
-load_dotenv(BASE_DIR / ENV_FILE)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'default-secret-key')  # Default value for development
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'default-secret-key')  # Default value for development
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 't')  # Check for a DEBUG environment variable
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('true', '1', 't')  # Check for a DEBUG environment variable
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -84,12 +81,12 @@ ASGI_APPLICATION = 'B2B_Backend.asgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get('DJANGO_DB_ENGINE', 'django.db.backends.sqlite3'),
-        'NAME': os.environ.get('DJANGO_DB_NAME', BASE_DIR / 'data' / 'db' / 'db.sqlite3'),
-        'USER': os.environ.get('DJANGO_DB_USER', ''),
-        'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD', ''),
-        'HOST': os.environ.get('DJANGO_DB_HOST', ''),
-        'PORT': os.environ.get('DJANGO_DB_PORT', ''),
+        'ENGINE': os.getenv('DJANGO_DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.getenv('DJANGO_DB_NAME', BASE_DIR / 'data' / 'db' / os.getenv('DJANGO_DB_SQLITE', 'db.sqlite3')),
+        'USER': os.getenv('DJANGO_DB_USER', ''),
+        'PASSWORD': os.getenv('DJANGO_DB_PASSWORD', ''),
+        'HOST': os.getenv('DJANGO_DB_HOST', ''),
+        'PORT': os.getenv('DJANGO_DB_PORT', ''),
     }
 }
 
@@ -117,9 +114,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = os.environ.get('DJANGO_LANGUAGE_CODE', 'en-us')
+LANGUAGE_CODE = os.getenv('DJANGO_LANGUAGE_CODE', 'en-us')
 
-TIME_ZONE = os.environ.get('DJANGO_TIME_ZONE', 'UTC')
+TIME_ZONE = os.getenv('DJANGO_TIME_ZONE', 'UTC')
 
 USE_I18N = True
 
