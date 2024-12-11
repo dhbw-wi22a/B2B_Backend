@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 # Environment variables
-.env.*.prod
+.env*
 
 # Database
 /data/*
