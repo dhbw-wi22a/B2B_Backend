@@ -8,7 +8,7 @@ services:
     container_name: ${DJANGO_CONTAINER_NAME:-django-app}
     restart: always
     env_file:
-      - ${DJANGO_ENV_FILE:-.env.dev}  # Dynamically load .env.dev or .env.prod
+      - path: .env  #Doklpoy environment variables
     volumes:
       - media_data:/app/data/media    # Persist uploaded media files
       - static_data:/app/data/static  # Persist collected static files
@@ -26,6 +26,8 @@ services:
     image: nginx:latest
     container_name: nginx
     restart: always
+    env_file:
+      - path: .env  #Doklpoy environment variables
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro  # Use the custom Nginx config
       - media_data:/app/data/media
