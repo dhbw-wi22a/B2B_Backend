@@ -137,3 +137,52 @@ MEDIA_ROOT = BASE_DIR / 'data' / 'media'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'log' / 'django_debug.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'propagate': False,
+        },
+        'gunicorn.error': {
+            'level': 'ERROR',
+            'handlers': ['console', 'file'],
+            'propagate': True,
+        },
+        'gunicorn.access': {
+            'level': 'INFO',
+            'handlers': ['console'],
+            'propagate': True,
+        },
+    },
+}
+
+# CSRF SETTINGS
+# CSRF_COOKIE_SECURE = True  # Use only with HTTPS
+# CSRF_COOKIE_HTTPONLY = True  # Default is False; set to True if appropriate
+# CSRF_TRUSTED_ORIGINS = os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS').split(',')
