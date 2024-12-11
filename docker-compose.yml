@@ -5,10 +5,8 @@ networks:
 services:
   django-app:
     build: .
-    container_name: django-app
+    container_name: ${DJANGO_CONTAINER_NAME:-django-app}
     restart: always
-    ports:
-      - "8008:8000"
     env_file:
       - ${DJANGO_ENV_FILE:-.env.dev}  # Dynamically load .env.dev or .env.prod
     volumes:
@@ -21,21 +19,21 @@ services:
       retries: 3
     networks:
         - app_net
-    depends_on:
-      - nginx
+    ports:
+      - ${DJANGO_EXTERNAL_PORT:-8002}:${DJANGO_INTERNAL_PORT:-8000}
 
   nginx:
     image: nginx:latest
     container_name: nginx
     restart: always
-    ports:
-      - "8001:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro  # Use the custom Nginx config
       - media_data:/app/data/media
       - static_data:/app/data/static
     networks:
       - app_net
+    ports:
+      - ${NGINX_EXTERNAL_PORT:-8011}:${NGINX_INTERNAL_PORT:-8001}
 
 volumes:
   db_data:

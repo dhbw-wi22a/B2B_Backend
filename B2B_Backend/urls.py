@@ -19,7 +19,7 @@ from django.http import HttpResponse
 from django.urls import path, include
 
 def default_view(request):
-    return HttpResponse("Hello, world! This is the default view.")
+    return HttpResponse("Hello, world! This is the default view.\n \n +++ RELEASE VERSION +++")
 
 
 urlpatterns = [
