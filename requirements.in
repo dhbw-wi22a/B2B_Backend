@@ -3,3 +3,4 @@ djangorestframework
 python-dotenv
 uvicorn
 Pillow
+psycopg2-binary

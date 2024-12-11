@@ -20,6 +20,8 @@ h11==0.14.0
     # via uvicorn
 pillow==11.0.0
     # via -r requirements.in
+psycopg2-binary==2.9.10
+    # via -r requirements.in
 python-dotenv==1.0.1
     # via -r requirements.in
 sqlparse==0.5.2
