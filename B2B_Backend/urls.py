@@ -19,10 +19,13 @@ from django.urls import path, include
 
 from Webshop.views import default_view
 
+url_prefix = 'web'
+
 urlpatterns = [
-    path('', default_view),
-    path('admin/', admin.site.urls),
-    path('api/', include('Webshop.urls')),  # Include app's URLs under /api/
+    path(f'{url_prefix}/', default_view),
+    path(f'{url_prefix}/admin/', admin.site.urls),
+    path(f'{url_prefix}/api/', include('Webshop.urls')),  # Include app's URLs under /api/
 
 
 ]
+
