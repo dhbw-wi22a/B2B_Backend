@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - master
+      - release
+  merge:
+    branches:
+      - master
+      - release
 
 jobs:
   trigger-deploy:
