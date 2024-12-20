@@ -16,11 +16,6 @@ __pycache__/
 .idea/
 .venv/
 
-# Ignore Django migrations
-*/migrations/
-!*/migrations/__init__.py
-
-
 # Docker
 *.log
 *.pid
