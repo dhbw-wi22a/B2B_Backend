@@ -8,6 +8,9 @@ class ItemDetails(models.Model):
     item_details_id = models.AutoField(primary_key=True)
     item_name = models.CharField(max_length=100)
     item_description = models.TextField(max_length=1000)
+    article_id = models.CharField(max_length=10, unique=True, default='')
+    item_stock = models.PositiveIntegerField(default=0)
+
 
     def __str__(self):
         return self.item_name
@@ -30,6 +33,8 @@ class Item(models.Model):
     item_id = models.AutoField(primary_key=True)
     item_details = models.ForeignKey(ItemDetails, on_delete=models.DO_NOTHING)
     item_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+
 
     def __str__(self):
         return f"{self.item_details.item_name} - ${self.item_price}"
