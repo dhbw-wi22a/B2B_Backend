@@ -1,5 +1,5 @@
 # Stage 1: Build Dependencies
-FROM python:3.10-slim as builder
+FROM python:3.10-slim AS builder
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -30,7 +30,10 @@ FROM python:3.10-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    DJANGO_PREPARE_DB=1 \
+    DJANGO_CREATE_DEFAULT_ADMIN=1 \
+    DJANGO_WORKERS=3
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -41,19 +44,34 @@ COPY --from=builder /install /usr/local
 # Copy application code from the builder stage
 COPY . /app/
 
-# Conditionally run development commands if DEBUG is true
-# Default is true; can be overridden at build time
-ARG DEBUG=true
+# Create the required directories with permissions
+RUN mkdir -p /app/data/db /app/data/media /app/data/static
+# Create necessary log directory
+RUN mkdir -p /app/log
 
-RUN if [ "$DEBUG" = "true" ]; then \
+
+# Conditionally run database setup and collectstatic
+RUN if [ $DJANGO_PREPARE_DB = 1 ]; then \
+        echo "Starting static files collection..." && \
         python manage.py collectstatic --noinput && \
+        echo "Static files collected successfully." && \
+        echo "Starting database migrations..." && \
         python manage.py makemigrations --noinput && \
+        echo "Migrations created successfully." && \
         python manage.py migrate --noinput && \
-        python manage.py shell -c "from manage import create_default_admin; create_default_admin()"; \
+        echo "Database migrations applied successfully." && \
+        if [ $DJANGO_CREATE_DEFAULT_ADMIN = 1 ]; then \
+            echo "Creating default admin user..." && \
+            python manage.py shell -c "from manage import create_default_admin; create_default_admin()" && \
+            echo "Default admin created successfully."; \
+        fi; \
+    else \
+        echo "Database preparation is disabled. Skipping migrations and static file collection."; \
     fi
+
 
 # Expose the port the application runs on
 EXPOSE 8000
 
 # Command to run the ASGI app with Uvicorn
-CMD ["uvicorn", "B2B_Backend.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--workers", "3"]
+CMD ["sh", "-c", "uvicorn B2B_Backend.asgi:application --host 0.0.0.0 --port 8000 --workers ${DJANGO_WORKERS}"]

@@ -7,16 +7,19 @@ __pycache__/
 *.so
 
 # Environment variables
-.env
-.env.*
+.env*
 
 # Database
-*.sqlite3
 /data/*
 
 # PyCharm files
 .idea/
 .venv/
+
+# Ignore Django migrations
+*/migrations/
+!*/migrations/__init__.py
+
 
 # Docker
 *.log

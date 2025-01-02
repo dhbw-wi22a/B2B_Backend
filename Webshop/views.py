@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets, status, serializers
 from rest_framework.response import Response
 from django.db import transaction
@@ -7,7 +7,8 @@ from .serializers import OrderSerializer, OrderItemSerializer, OrderInfoSerializ
     ItemSerializer
 
 
-
+def default_view(request):
+    return JsonResponse({"message": "OK"})
 
 
 class ItemViewSet(viewsets.ReadOnlyModelViewSet):

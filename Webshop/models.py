@@ -12,6 +12,10 @@ class ItemDetails(models.Model):
     def __str__(self):
         return self.item_name
 
+    class Meta:
+        verbose_name = 'Item'
+        verbose_name_plural = 'Items'
+
 
 class ItemImage(models.Model):
     image_id = models.AutoField(primary_key=True)
@@ -64,8 +68,6 @@ class OrderManager(models.Manager):
             order.save(update_fields=['order_total'])
 
             return order
-
-
 
 
 class Order(models.Model):

@@ -5,37 +5,49 @@ networks:
 services:
   django-app:
     build: .
-    container_name: ${DJANGO_CONTAINER_NAME:-django-app}
+    #container_name: ${DJANGO_CONTAINER_NAME:-django-app} # Disabled: Dokploy
     restart: always
     env_file:
-      - path: .env  #Doklpoy environment variables
+      - path: .env
     volumes:
+      - db_data:/app/data/db          # Persist SQLite database file
       - media_data:/app/data/media    # Persist uploaded media files
       - static_data:/app/data/static  # Persist collected static files
+    networks:
+      - app_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     healthcheck:  # Healthcheck to ensure the service is up
-      test: ["CMD", "curl", "-f", "http://localhost/api/?format=json"]
+      test: ["CMD", "curl", "-f", "http://django-app:8000"]
       interval: 30s
       timeout: 10s
       retries: 3
-    networks:
-        - app_net
-    ports:
-      - ${DJANGO_EXTERNAL_PORT:-8002}:${DJANGO_INTERNAL_PORT:-8000}
+
 
   nginx:
     image: nginx:latest
-    container_name: nginx
+    #container_name: ${NGINX_CONTAINER_NAME:-nginx-test} # Disabled: Dokploy
     restart: always
     env_file:
-      - path: .env  #Doklpoy environment variables
+      - path: .env
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro  # Use the custom Nginx config
-      - media_data:/app/data/media
-      - static_data:/app/data/static
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro            # Config file
+      - media_data:/app/data/media                              # Media files directory
+      - static_data:/app/data/static                            # Static files directory
     networks:
       - app_net
     ports:
-      - ${NGINX_EXTERNAL_PORT:-8011}:${NGINX_INTERNAL_PORT:-8001}
+      - ${NGINX_PORT:-8001}:80 # Map the Nginx port
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    depends_on:
+      - django-app
 
 volumes:
   db_data:
