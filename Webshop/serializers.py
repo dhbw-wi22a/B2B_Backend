@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Item, Order, OrderInfo, OrderItem, ItemImage, ItemDetails
+from .models import Item, Order, OrderInfo, OrderItem, ItemImage, ItemDetails, CustomUser
 
 
 class ItemImageSerializer(serializers.ModelSerializer):
@@ -99,3 +99,27 @@ class OrderSerializer(serializers.ModelSerializer):
         representation['order_info'] = OrderInfoSerializer(instance.order_info).data
         representation['items'] = OrderItemSerializer(instance.orderitem_set.all(), many=True).data
         return representation
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, min_length=8)
+    password_confirm = serializers.CharField(write_only=True, required=True, min_length=8)
+
+    class Meta:
+        model = CustomUser
+        fields = ['email', 'password', 'password_confirm']
+
+    def validate(self, data):
+        # Check if passwords match
+        if data['password'] != data['password_confirm']:
+            raise serializers.ValidationError({"password_confirm": "The passwords do not match."})
+        return data
+
+    def create(self, validated_data):
+        # Remove the password_confirm field as it is not used in user creation
+        validated_data.pop('password_confirm')
+        # Use the model manager to create a user
+        user = CustomUser.objects.create_user(
+            email=validated_data['email'],
+            password=validated_data['password']
+        )
+        return user

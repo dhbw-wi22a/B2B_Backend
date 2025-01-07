@@ -1,10 +1,11 @@
 from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets, status, serializers
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.db import transaction
 from .models import Order, OrderItem, Item, OrderInfo, ItemDetails, CustomUser
 from .serializers import OrderSerializer, OrderItemSerializer, OrderInfoSerializer,  \
-    ItemSerializer
+    ItemSerializer, UserRegistrationSerializer
 
 
 def default_view(request):
@@ -66,24 +67,15 @@ class OrderViewSet(viewsets.ViewSet):
         """
         return Response({"error": "DELETE method is not allowed on orders."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
-class UserRegistrationSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, min_length=8)
-    password_confirm = serializers.CharField(write_only=True, required=True, min_length=8)
 
-    class Meta:
-        model = CustomUser
-        fields = ['email', 'password']
-
-    def validate(self, data):
-        if data['password'] != data['password_confirm']:
-            raise serializers.ValidationError({"password": "The passwords do not match."})
-        return data
-
-    def create(self, validated_data):
-        validated_data.pop('password_confirm')
-        user = CustomUser.objects.create_user(
-            email=validated_data['email'],
-            password=validated_data['password']
-        )
-        return user
+class UserRegistrationView(APIView):
+    """
+    API endpoint for registering a new user.
+    """
+    def post(self, request, *args, **kwargs):
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()  # Calls the `create` method in the serializer
+            return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
