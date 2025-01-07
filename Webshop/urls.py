@@ -6,8 +6,8 @@ from .views import OrderViewSet, ItemViewSet, UserRegistrationView
 router = DefaultRouter()
 router.register(r'items', ItemViewSet)
 router.register(r'orders', OrderViewSet, basename='orders')
-router.register(r'users', UserRegistrationView, basename='users')
 
 urlpatterns = [
     path('', include(router.urls)),  # Register all API routes
+    path('user/register/', UserRegistrationView.as_view(), name='user-registration')
 ]
