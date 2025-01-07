@@ -42,7 +42,10 @@ INSTALLED_APPS = [
     'Webshop.apps.WebshopConfig',
     # Third-party apps
     'rest_framework',
+    'rest_framework_simplejwt'
 ]
+
+AUTH_USER_MODEL = 'Webshop.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -53,6 +56,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
 
 ROOT_URLCONF = 'B2B_Backend.urls'
 

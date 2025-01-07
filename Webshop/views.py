@@ -2,7 +2,7 @@ from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets, status, serializers
 from rest_framework.response import Response
 from django.db import transaction
-from .models import Order, OrderItem, Item, OrderInfo, ItemDetails
+from .models import Order, OrderItem, Item, OrderInfo, ItemDetails, CustomUser
 from .serializers import OrderSerializer, OrderItemSerializer, OrderInfoSerializer,  \
     ItemSerializer
 
@@ -65,4 +65,25 @@ class OrderViewSet(viewsets.ViewSet):
         Disable DELETE for orders.
         """
         return Response({"error": "DELETE method is not allowed on orders."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, min_length=8)
+    password_confirm = serializers.CharField(write_only=True, required=True, min_length=8)
+
+    class Meta:
+        model = CustomUser
+        fields = ['email', 'password']
+
+    def validate(self, data):
+        if data['password'] != data['password_confirm']:
+            raise serializers.ValidationError({"password": "The passwords do not match."})
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('password_confirm')
+        user = CustomUser.objects.create_user(
+            email=validated_data['email'],
+            password=validated_data['password']
+        )
+        return user
 

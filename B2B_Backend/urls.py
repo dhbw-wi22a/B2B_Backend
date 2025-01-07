@@ -21,11 +21,18 @@ from Webshop.views import default_view
 
 url_prefix = 'web'
 
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView,
+)
+
 urlpatterns = [
     path(f'{url_prefix}/', default_view),
     path(f'{url_prefix}/admin/', admin.site.urls),
     path(f'{url_prefix}/api/', include('Webshop.urls')),  # Include app's URLs under /api/
-
-
+    path(f'{url_prefix}/api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path(f'{url_prefix}/api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path(f'{url_prefix}/api/token/verify/', TokenVerifyView.as_view(), name='token_verify')
 ]
 

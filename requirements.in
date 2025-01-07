@@ -3,3 +3,4 @@ djangorestframework
 python-dotenv
 uvicorn
 Pillow
+djangorestframework-simplejwt
