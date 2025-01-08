@@ -1,3 +1,4 @@
+from ckeditor.fields import RichTextField
 from django.db import models, transaction
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, AbstractUser
 
@@ -8,7 +9,7 @@ UPLOAD_PATH_ITEM_IMAGES = 'item_images/'
 class ItemDetails(models.Model):
     item_details_id = models.AutoField(primary_key=True)
     item_name = models.CharField(max_length=100)
-    item_description = models.TextField(max_length=1000)
+    item_description = RichTextField()
     article_id = models.CharField(max_length=10, unique=True, default='')
     item_stock = models.PositiveIntegerField(default=0)
 

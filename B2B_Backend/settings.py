@@ -42,7 +42,9 @@ INSTALLED_APPS = [
     'Webshop.apps.WebshopConfig',
     # Third-party apps
     'rest_framework',
-    'rest_framework_simplejwt'
+    'rest_framework_simplejwt',
+    'ckeditor'
+
 ]
 
 AUTH_USER_MODEL = 'Webshop.CustomUser'
@@ -188,6 +190,15 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': True,
         },
+    },
+}
+
+# CKEDITOR SETTINGS with all possible options
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',
+        'height': 400,
+        'width': '100%',
     },
 }
 
