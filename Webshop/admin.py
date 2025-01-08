@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+
 from .models import ItemDetails, ItemImage, Item, OrderInfo, Order, OrderItem, ShoppingCart, CartItem
 
 
@@ -51,4 +53,15 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     inlines = [CartItemInline]
     ordering = ('-created_at',)
 
+@admin.register(get_user_model())
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('email', 'is_staff', 'is_active')
+    list_filter = ('is_staff', 'is_active')
+    search_fields = ('email',)
+    ordering = ('email',)
+    readonly_fields = ('email',)
+    fieldsets = (
+        (None, {'fields': ('email',)}),
+        ('Permissions', {'fields': ('is_staff', 'is_active')}),
+    )
 
