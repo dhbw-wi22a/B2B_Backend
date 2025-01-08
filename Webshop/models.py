@@ -1,5 +1,6 @@
 from django.db import models, transaction
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, AbstractUser
+from django.utils.translation import gettext_lazy as _
 
 # Constants
 UPLOAD_PATH_ITEM_IMAGES = 'item_images/'
@@ -70,18 +71,30 @@ class OrderManager(models.Manager):
 
             return order
 
+class OrderStatus(models.TextChoices):
+    PENDING = 'PENDING', _('Pending')
+    SHIPPED = 'SHIPPED', _('Shipped')
+    DELIVERED = 'DELIVERED', _('Delivered')
+    CANCELLED = 'CANCELLED', _('Cancelled')
+    RETURNED = 'RETURNED', _('Returned')
 
 class Order(models.Model):
     order_id = models.AutoField(primary_key=True)
     order_date = models.DateTimeField(auto_now_add=True)
     order_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     order_active = models.BooleanField(default=True)
+    order_status = models.CharField(
+        max_length=20,
+        choices=OrderStatus.choices,
+        default=OrderStatus.PENDING
+    )
     items = models.ManyToManyField(Item, through="OrderItem")
+    user = models.ForeignKey('CustomUser', on_delete=models.DO_NOTHING, null=True)
 
     objects = OrderManager()
 
     def __str__(self):
-        return f"Order #{self.order_id} - Total: ${self.order_total}"
+        return f"{self.order_id}"
 
 
 class OrderInfo(models.Model):
@@ -107,8 +120,8 @@ class ShoppingCart(models.Model):
     """
     cart_id = models.AutoField(primary_key=True)
     items = models.ManyToManyField('Item', through="CartItem", related_name="carts")
-    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    user = models.OneToOneField('CustomUser', on_delete=models.CASCADE)
 
     def get_total_price(self):
         """
@@ -133,6 +146,23 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.item.item_details.item_name} in Cart #{self.cart.cart_id}"
+    
+class Address(models.Model):
+    address_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE)
+    address = models.TextField(max_length=100)
+    billing = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.address}"
+    
+    class Meta:
+        verbose_name = 'Address'
+        verbose_name_plural = 'Addresses'
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'billing'], name='unique_billing_address')
+        ]
+
     
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -159,13 +189,45 @@ class CustomUser(AbstractUser, PermissionsMixin):
     
     username = None
     email = models.EmailField(unique=True)
+    company_id = models.CharField(max_length=100, blank=True)
+    company_name = models.CharField(max_length=100, blank=True)
+    phone = models.CharField(max_length=15, blank=True)
+    verified = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
     def __str__(self):
         return self.email
+
+    @property
+    def orders(self):
+        return self.order_set.all()
+
+    @property
+    def shopping_cart(self):
+        return self.shoppingcart
+    
+    @property
+    def addresses(self):
+        return self.address_set.all()
+    
+    @property
+    def billing_address(self):
+        return self.address_set.filter(billing=True).first()
+
+    @property
+    def full_name(self):
+        return self.get_full_name() or self.email
+
+    def save(self, *args, **kwargs):
+        is_new = self._state.adding
+        super().save(*args, **kwargs)
+        if is_new:
+            ShoppingCart.objects.get_or_create(user=self)
+
+
     
     
