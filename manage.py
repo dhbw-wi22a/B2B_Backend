@@ -32,8 +32,11 @@ def main():
 
 def create_default_admin():
     """Create a default superuser if it doesn't already exist."""
-    from Webshop.models import CustomUser as User
+    from django.contrib.auth import get_user_model
     from django.conf import settings
+
+    # Get the project user model
+    User = get_user_model()
 
     # Read admin credentials from environment variables (with fallback defaults)
     admin_email = os.environ.get('DJANGO_ADMIN_EMAIL', 'admin@example.com')
