@@ -19,7 +19,7 @@ class ItemDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ItemDetails
-        fields = ['item_details_id', 'item_name', 'item_description', 'images']
+        fields = ['item_details_id', 'article_id','item_name', 'item_description','item_stock', 'images']
 
 
 class ItemSerializer(serializers.ModelSerializer):

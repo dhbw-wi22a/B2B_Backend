@@ -18,9 +18,9 @@ class ItemInline(admin.TabularInline):  # Inline for Items
 
 @admin.register(ItemDetails)
 class ItemDetailsAdmin(admin.ModelAdmin):
-    list_display = ('item_name',)
+    list_display = ('item_name','article_id','item_stock')
     inlines = [ItemImageInline, ItemInline]
-    search_fields = ('item_name',)
+    search_fields = ('item_name','article_id')
     ordering = ('item_name',)
 
 
