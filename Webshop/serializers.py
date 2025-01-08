@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import Item, Order, OrderInfo, OrderItem, ItemImage, ItemDetails, CustomUser
+
+from .models import Item, Order, OrderInfo, OrderItem, ItemImage, ItemDetails, CustomUser, Address, ShoppingCart, \
+    CartItem
 
 
 class ItemImageSerializer(serializers.ModelSerializer):
@@ -37,11 +39,12 @@ class OrderItemSerializer(serializers.ModelSerializer):
     """
     Serializer for OrderItem model.
     """
-    item = serializers.PrimaryKeyRelatedField(queryset=Item.objects.all())
+    item = ItemSerializer(read_only=True)  # Show item details for read
+    item_id = serializers.PrimaryKeyRelatedField(queryset=Item.objects.all(), write_only=True, source='item')
 
     class Meta:
         model = OrderItem
-        fields = ['item', 'quantity']
+        fields = ['item', 'item_id', 'quantity']
 
 
 class OrderInfoSerializer(serializers.ModelSerializer):
@@ -59,19 +62,32 @@ class OrderSerializer(serializers.ModelSerializer):
     """
     order_info = OrderInfoSerializer()
     items = OrderItemSerializer(many=True, write_only=True)
+    items_read = serializers.SerializerMethodField()  # Read-only field for items
 
+    fields = [
+        'order_id',
+        'order_active',
+        'order_status',
+        'order_date',
+        'order_total',
+        'order_info',
+        'items',
+        'items_read',
+    ]
     class Meta:
         model = Order
-        fields = ['order_id', 'order_date', 'order_total', 'order_active', 'order_info', 'items']
+        extra_kwargs = {
+            'items': {'write_only': True},
+        }
 
     def validate(self, data):
         """
         Custom validation to ensure nested fields are valid.
         """
-        if not data.get('order_info'):
+        if 'order_info' not in data:
             raise serializers.ValidationError({"order_info": "This field is required."})
 
-        if not data.get('items'):
+        if 'items' not in data or not data['items']:
             raise serializers.ValidationError({"items": "At least one item is required to create an order."})
 
         return data
@@ -91,14 +107,12 @@ class OrderSerializer(serializers.ModelSerializer):
         )
         return order
 
-    def to_representation(self, instance):
+    def get_items_read(self, obj):
         """
-        Customize the representation to include nested order info and items.
+        Get items for read operations, optimizing with select_related.
         """
-        representation = super().to_representation(instance)
-        representation['order_info'] = OrderInfoSerializer(instance.order_info).data
-        representation['items'] = OrderItemSerializer(instance.orderitem_set.all(), many=True).data
-        return representation
+        items = obj.orderitem_set.select_related('item')
+        return OrderItemSerializer(items, many=True).data
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
@@ -123,3 +137,69 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
+
+class UserShortSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CustomUser
+        fields = ['email',
+                  'company_id',
+                  'company_name',
+                  'phone',
+                  'first_name',
+                  'last_name',
+                  'full_name',
+                  ]
+        read_only_fields = ['email', 'full_name']
+
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ['address_id', 'address', 'billing']
+
+class CartItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartItem
+        fields = ['item', 'quantity']
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    items = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ShoppingCart
+        fields = ['cart_id', 'items', 'updated_at']
+
+    def get_items(self, obj):
+        # Use prefetch_related to optimize database hits
+        cart_items = obj.cartitem_set.all().select_related('item')
+        return CartItemSerializer(cart_items, many=True).data
+
+class UserSerializer(serializers.ModelSerializer):
+    addresses = AddressSerializer(many=True, read_only=True)
+    billing_address = AddressSerializer(read_only=True)
+    shopping_cart = ShoppingCartSerializer(read_only=True)
+    class Meta:
+        model = CustomUser
+        fields = ['email',
+                  'company_id',
+                  'company_name',
+                  'phone',
+                  'first_name',
+                  'last_name',
+                  'full_name',
+                  'addresses',
+                  'billing_address',
+                  'shopping_cart',
+                  ]
+        read_only_fields = ['email', 'full_name', 'shopping_cart',]
+
+class UserOrdersSerializer(serializers.ModelSerializer):
+    orders = OrderSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = CustomUser
+        fields = ['email', 'orders']
+        read_only_fields = ['email', 'orders']
+
