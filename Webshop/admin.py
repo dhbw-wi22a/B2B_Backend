@@ -47,11 +47,6 @@ class CartItemInline(admin.TabularInline):  # Inline for Cart Items
     extra = 1
 
 
-@admin.register(ShoppingCart)
-class ShoppingCartAdmin(admin.ModelAdmin):
-    list_display = ('cart_id', 'created_at', 'updated_at')
-    inlines = [CartItemInline]
-    ordering = ('-created_at',)
 
 @admin.register(get_user_model())
 class UserAdmin(admin.ModelAdmin):
