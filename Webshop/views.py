@@ -1,22 +1,22 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, status, serializers, generics
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from django.db import transaction
 
-from .models import Order, OrderItem, Item, OrderInfo, ItemDetails, CustomUser as User, ShoppingCart, Address
-from .serializers import OrderSerializer, OrderItemSerializer, OrderInfoSerializer, \
-    ItemSerializer, UserRegistrationSerializer, UserSerializer, ShoppingCartSerializer, UserShortSerializer, \
+from .models import Order, Item, CustomUser as User, ShoppingCart, Address
+from .serializers import OrderSerializer, ItemSerializer, UserRegistrationSerializer, UserSerializer, \
+    ShoppingCartSerializer, UserShortSerializer, \
     CartItemSerializer, AddressSerializer
 
 
 def default_view(request):
     return JsonResponse({"message": "OK"})
+
 
 # 1. User Registration View
 class UserRegistrationView(CreateAPIView):
@@ -28,7 +28,6 @@ class BaseUserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'head', 'patch', 'delete']
-
 
     def get_queryset(self):
         return self.queryset.filter(pk=self.request.user.pk)
@@ -59,7 +58,6 @@ class BaseUserViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 
 class UserShortView(BaseUserViewSet):
@@ -150,7 +148,6 @@ class ShoppingCartViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({'status': 'Success'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
     @action(detail=False, methods=['post'], url_path='clear')
     def clear_cart(self, request, pk=None):
         """
@@ -159,6 +156,7 @@ class ShoppingCartViewSet(viewsets.ReadOnlyModelViewSet):
         cart = self.get_object()
         cart.clear()
         return Response({'status': 'Success'}, status=status.HTTP_204_NO_CONTENT)
+
 
 # 5. Address View
 class AddressViewSet(viewsets.ModelViewSet):
@@ -189,16 +187,16 @@ class AddressViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='billing')
     def get_billing_address(self, request, pk=None):
         try:
-           # Attempt to fetch the billing address for the user
-           address = self.queryset.get(billing=True)
-           serializer = AddressSerializer(address)
-           return Response(serializer.data, status=status.HTTP_200_OK)
+            # Attempt to fetch the billing address for the user
+            address = self.queryset.get(billing=True)
+            serializer = AddressSerializer(address)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except Address.DoesNotExist:
-           # Handle the case where no billing address exists
-           return Response(
-               {"detail": "Billing address not found."},
-               status=status.HTTP_404_NOT_FOUND
-           )
+            # Handle the case where no billing address exists
+            return Response(
+                {"detail": "Billing address not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 # 6. Item View (Product Listings)

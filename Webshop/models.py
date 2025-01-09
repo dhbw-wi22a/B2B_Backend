@@ -1,10 +1,11 @@
 from ckeditor.fields import RichTextField
-from django.db import models, transaction
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, AbstractUser
+from django.db import models, transaction
 from django.utils.translation import gettext_lazy as _
 
 # Constants
 UPLOAD_PATH_ITEM_IMAGES = 'item_images/'
+
 
 class ModelDateMixin(models.Model):
     """
@@ -97,12 +98,14 @@ class OrderManager(models.Manager):
 
             return order
 
+
 class OrderStatus(models.TextChoices):
     PENDING = 'PENDING', _('Pending')
     SHIPPED = 'SHIPPED', _('Shipped')
     DELIVERED = 'DELIVERED', _('Delivered')
     CANCELLED = 'CANCELLED', _('Cancelled')
     RETURNED = 'RETURNED', _('Returned')
+
 
 class Order(ModelDateMixin, models.Model):
     created_at = None
@@ -191,8 +194,7 @@ class CartItem(models.Model):
         return f"{self.quantity} x {self.item.item_details.item_name} in Cart #{self.cart.cart_id}"
 
 
-from django.db import models, IntegrityError
-from django.core.exceptions import ValidationError
+from django.db import models
 
 
 class Address(models.Model):
@@ -223,7 +225,6 @@ class Address(models.Model):
         super().save(*args, **kwargs)
 
 
-
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -244,9 +245,9 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(_("Superuser muss is_superuser=True haben."))
 
         return self.create_user(email, password, **extra_fields)
-    
+
+
 class CustomUser(AbstractUser, PermissionsMixin):
-    
     username = None
     email = models.EmailField(unique=True)
     company_identifier = models.CharField(max_length=100, blank=True)
@@ -295,8 +296,3 @@ class CustomUser(AbstractUser, PermissionsMixin):
         self.save(update_fields=['is_active'])
         self.shopping_cart.clear()
         self.save()
-
-
-
-
-    

@@ -28,7 +28,6 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'default-secret-key')  # Default val
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('true', '1', 't')  # Check for a DEBUG environment variable
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',')
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -92,7 +91,6 @@ TEMPLATES = [
 
 ASGI_APPLICATION = 'B2B_Backend.asgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -106,8 +104,6 @@ DATABASES = {
         'PORT': os.getenv('DJANGO_DB_PORT', ''),
     }
 }
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -127,7 +123,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -138,7 +133,6 @@ TIME_ZONE = os.getenv('DJANGO_TIME_ZONE', 'UTC')
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

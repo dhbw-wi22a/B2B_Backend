@@ -27,4 +27,3 @@ urlpatterns = [
     path(f'{url_prefix}/admin/', admin.site.urls),
     path(f'{url_prefix}/api/', include('Webshop.urls')),  # Include app's URLs under /api/
 ]
-

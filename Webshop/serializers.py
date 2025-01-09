@@ -8,11 +8,10 @@ class ItemImageSerializer(serializers.ModelSerializer):
     """
     Serializer for ItemImage model.
     """
+
     class Meta:
         model = ItemImage
         fields = ['image_id', 'image']
-
-
 
 
 class ItemDetailSerializer(serializers.ModelSerializer):
@@ -53,6 +52,7 @@ class OrderInfoSerializer(serializers.ModelSerializer):
     """
     Serializer for OrderInfo model.
     """
+
     class Meta:
         model = OrderInfo
         fields = ['buyer_name', 'buyer_email', 'buyer_phone', 'buyer_address']
@@ -119,6 +119,7 @@ class OrderSerializer(serializers.ModelSerializer):
         items = obj.orderitem_set.select_related('item')
         return OrderItemSerializer(items, many=True).data
 
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     password_confirm = serializers.CharField(write_only=True, required=True)
@@ -143,8 +144,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         )
         return user
 
-class UserShortSerializer(serializers.ModelSerializer):
 
+class UserShortSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['email',
@@ -161,18 +162,17 @@ class UserShortSerializer(serializers.ModelSerializer):
         }
 
 
-
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = ['address_id', 'address', 'billing']
 
 
-
 class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
         fields = ['item', 'quantity']
+
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
     items = serializers.SerializerMethodField()
@@ -184,7 +184,6 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     def get_items(self, obj):
         cart_items = obj.cartitem_set.all()
         return CartItemSerializer(cart_items, many=True).data
-
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -212,9 +211,6 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
 
-
-
-
 class UserOrdersSerializer(serializers.ModelSerializer):
     orders = OrderSerializer(many=True)
 
@@ -223,7 +219,5 @@ class UserOrdersSerializer(serializers.ModelSerializer):
         fields = ['email', 'orders']
         extra_kwargs = {
             'email': {'read_only': True},
-            'orders': {'read_only':True},
+            'orders': {'read_only': True},
         }
-
-

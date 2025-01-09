@@ -1,5 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView,
+)
+
 from .views import (
     OrderViewSet,
     ItemViewSet,
@@ -8,11 +14,6 @@ from .views import (
     UserShortView,
     ShoppingCartViewSet,
     AddressViewSet
-)
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-    TokenVerifyView,
 )
 
 # Register ViewSets with the router

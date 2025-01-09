@@ -33,7 +33,6 @@ def main():
 def create_default_admin():
     """Create a default superuser if it doesn't already exist."""
     from django.contrib.auth import get_user_model
-    from django.conf import settings
 
     # Get the project user model
     User = get_user_model()
