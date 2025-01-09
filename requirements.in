@@ -5,3 +5,4 @@ uvicorn
 Pillow
 djangorestframework-simplejwt
 django-filter
+django-ckeditor

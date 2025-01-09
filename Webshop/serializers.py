@@ -13,6 +13,8 @@ class ItemImageSerializer(serializers.ModelSerializer):
         fields = ['image_id', 'image']
 
 
+
+
 class ItemDetailSerializer(serializers.ModelSerializer):
     """
     Serializer for ItemDetails model, including associated images.
@@ -32,7 +34,7 @@ class ItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Item
-        fields = ['item_id', 'item_price', 'item_details']
+        fields = ['item_id', 'item_price', 'item_details', 'item_stock', 'article_id']
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

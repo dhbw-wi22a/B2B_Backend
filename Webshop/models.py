@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+from ckeditor.fields import RichTextField
 from django.db import models, transaction
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, AbstractUser
 from django.utils.translation import gettext_lazy as _
@@ -32,8 +32,8 @@ class ItemCategory(ModelDateMixin, models.Model):
 class ItemDetails(ModelDateMixin, models.Model):
     item_details_id = models.AutoField(primary_key=True)
     item_name = models.CharField(max_length=100)
-    categories = models.ManyToManyField(ItemCategory, related_name='items', null=True)
-    item_description = models.TextField(max_length=1000)
+    categories = models.ManyToManyField(ItemCategory, related_name='items')
+    item_description = RichTextField()
 
     def __str__(self):
         return self.item_name
@@ -54,8 +54,10 @@ class ItemImage(models.Model):
 
 class Item(ModelDateMixin, models.Model):
     item_id = models.AutoField(primary_key=True)
-    item_details = models.ForeignKey(ItemDetails, on_delete=models.DO_NOTHING)
+    item_details = models.ForeignKey(ItemDetails, on_delete=models.DO_NOTHING, related_name='items')
     item_price = models.DecimalField(max_digits=10, decimal_places=2)
+    article_id = models.CharField(max_length=10, unique=True, default='')
+    item_stock = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"{self.item_details.item_name} - ${self.item_price}"
@@ -267,11 +269,11 @@ class CustomUser(AbstractUser, PermissionsMixin):
     @property
     def shopping_cart(self):
         return self.shoppingcart
-    
+
     @property
     def addresses(self):
         return self.addresses.all()
-    
+
     @property
     def billing_address(self):
         return self.addresses.filter(billing=True).first()
@@ -296,5 +298,5 @@ class CustomUser(AbstractUser, PermissionsMixin):
 
 
 
-    
+
     

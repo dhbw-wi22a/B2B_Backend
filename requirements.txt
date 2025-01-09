@@ -13,11 +13,17 @@ colorama==0.4.6
 django==5.1.4
     # via
     #   -r requirements.in
+    #   django-ckeditor
     #   django-filter
+    #   django-js-asset
     #   djangorestframework
     #   djangorestframework-simplejwt
+django-ckeditor==6.7.2
+    # via -r requirements.in
 django-filter==24.3
     # via -r requirements.in
+django-js-asset==3.0.1
+    # via django-ckeditor
 djangorestframework==3.15.2
     # via
     #   -r requirements.in
