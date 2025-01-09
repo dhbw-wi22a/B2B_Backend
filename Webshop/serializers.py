@@ -21,7 +21,7 @@ class ItemDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ItemDetails
-        fields = ['item_details_id', 'item_name', 'item_description', 'images']
+        fields = ['item_details_id', 'item_name', 'item_description', 'images', 'categories']
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -64,20 +64,23 @@ class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, write_only=True)
     items_read = serializers.SerializerMethodField()  # Read-only field for items
 
-    fields = [
-        'order_id',
-        'order_active',
-        'order_status',
-        'order_date',
-        'order_total',
-        'order_info',
-        'items',
-        'items_read',
-    ]
     class Meta:
         model = Order
+        fields = [
+            'order_id',
+            'order_status',
+            'order_date',
+            'order_total',
+            'order_info',
+            'items',
+            'items_read',
+        ]
         extra_kwargs = {
             'items': {'write_only': True},
+            'order_total': {'read_only': True},
+            'order_date': {'read_only': True},
+            'order_status': {'read_only': True},
+            'order_id': {'read_only': True},
         }
 
     def validate(self, data):
@@ -143,14 +146,17 @@ class UserShortSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['email',
-                  'company_id',
+                  'company_identifier',
                   'company_name',
                   'phone',
                   'first_name',
                   'last_name',
                   'full_name',
                   ]
-        read_only_fields = ['email', 'full_name']
+        extra_kwargs = {
+            'full_name': {'read_only': True},
+            'email': {'read_only': True},
+        }
 
 
 
@@ -158,6 +164,8 @@ class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = ['address_id', 'address', 'billing']
+
+
 
 class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -169,37 +177,51 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShoppingCart
-        fields = ['cart_id', 'items', 'updated_at']
+        fields = ['items', 'updated_at']
 
     def get_items(self, obj):
-        # Use prefetch_related to optimize database hits
-        cart_items = obj.cartitem_set.all().select_related('item')
+        cart_items = obj.cartitem_set.all()
         return CartItemSerializer(cart_items, many=True).data
+
+
 
 class UserSerializer(serializers.ModelSerializer):
     addresses = AddressSerializer(many=True, read_only=True)
     billing_address = AddressSerializer(read_only=True)
     shopping_cart = ShoppingCartSerializer(read_only=True)
+
     class Meta:
         model = CustomUser
-        fields = ['email',
-                  'company_id',
-                  'company_name',
-                  'phone',
-                  'first_name',
-                  'last_name',
-                  'full_name',
-                  'addresses',
-                  'billing_address',
-                  'shopping_cart',
-                  ]
-        read_only_fields = ['email', 'full_name', 'shopping_cart',]
+        fields = [
+            'email',
+            'company_identifier',
+            'company_name',
+            'phone',
+            'first_name',
+            'last_name',
+            'full_name',
+            'addresses',
+            'billing_address',
+            'shopping_cart',
+        ]
+        extra_kwargs = {
+            'full_name': {'read_only': True},
+            'email': {'read_only': True},
+        }
+
+
+
+
 
 class UserOrdersSerializer(serializers.ModelSerializer):
-    orders = OrderSerializer(many=True, read_only=True)
+    orders = OrderSerializer(many=True)
 
     class Meta:
         model = CustomUser
         fields = ['email', 'orders']
-        read_only_fields = ['email', 'orders']
+        extra_kwargs = {
+            'email': {'read_only': True},
+            'orders': {'read_only':True},
+        }
+
 

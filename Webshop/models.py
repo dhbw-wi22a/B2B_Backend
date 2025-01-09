@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db import models, transaction
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, AbstractUser
 from django.utils.translation import gettext_lazy as _
@@ -5,10 +6,33 @@ from django.utils.translation import gettext_lazy as _
 # Constants
 UPLOAD_PATH_ITEM_IMAGES = 'item_images/'
 
+class ModelDateMixin(models.Model):
+    """
+    Abstract model with created_at and updated_at fields.
+    """
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-class ItemDetails(models.Model):
+    class Meta:
+        abstract = True
+
+
+class ItemCategory(ModelDateMixin, models.Model):
+    category_id = models.AutoField(primary_key=True)
+    category_name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.category_name
+
+    class Meta:
+        verbose_name = 'Category'
+        verbose_name_plural = 'Categories'
+
+
+class ItemDetails(ModelDateMixin, models.Model):
     item_details_id = models.AutoField(primary_key=True)
     item_name = models.CharField(max_length=100)
+    categories = models.ManyToManyField(ItemCategory, related_name='items', null=True)
     item_description = models.TextField(max_length=1000)
 
     def __str__(self):
@@ -28,7 +52,7 @@ class ItemImage(models.Model):
         return f"Image for {self.item_details.item_name}"
 
 
-class Item(models.Model):
+class Item(ModelDateMixin, models.Model):
     item_id = models.AutoField(primary_key=True)
     item_details = models.ForeignKey(ItemDetails, on_delete=models.DO_NOTHING)
     item_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -78,7 +102,8 @@ class OrderStatus(models.TextChoices):
     CANCELLED = 'CANCELLED', _('Cancelled')
     RETURNED = 'RETURNED', _('Returned')
 
-class Order(models.Model):
+class Order(ModelDateMixin, models.Model):
+    created_at = None
     order_id = models.AutoField(primary_key=True)
     order_date = models.DateTimeField(auto_now_add=True)
     order_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -118,10 +143,10 @@ class ShoppingCart(models.Model):
     """
     Model representing a shopping cart.
     """
-    cart_id = models.AutoField(primary_key=True)
-    items = models.ManyToManyField('Item', through="CartItem", related_name="carts")
-    updated_at = models.DateTimeField(auto_now=True)
     user = models.OneToOneField('CustomUser', on_delete=models.CASCADE)
+    cart_id = models.AutoField(primary_key=True)
+    items = models.ManyToManyField('Item', through="CartItem")
+    updated_at = models.DateTimeField(auto_now=True)
 
     def get_total_price(self):
         """
@@ -131,6 +156,22 @@ class ShoppingCart(models.Model):
             cart_item.item.item_price * cart_item.quantity
             for cart_item in self.cartitem_set.all()
         )
+
+    def set_item(self, item, quantity=1):
+        """
+        Set the quantity of an item in the shopping cart.
+        Removes the item if the quantity is less than 1.
+        """
+        if quantity < 1:
+            self.cartitem_set.filter(item=item).delete()
+        else:
+            self.cartitem_set.update_or_create(item=item, defaults={'quantity': quantity})
+
+    def clear(self):
+        """
+        Remove all items from the shopping cart.
+        """
+        self.cartitem_set.all().delete()
 
     def __str__(self):
         return f"Shopping Cart #{self.cart_id}"
@@ -146,24 +187,41 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.item.item_details.item_name} in Cart #{self.cart.cart_id}"
-    
+
+
+from django.db import models, IntegrityError
+from django.core.exceptions import ValidationError
+
+
 class Address(models.Model):
     address_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE)
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='addresses')
     address = models.TextField(max_length=100)
     billing = models.BooleanField(default=False)
-    
+
     def __str__(self):
         return f"{self.address}"
-    
+
     class Meta:
         verbose_name = 'Address'
         verbose_name_plural = 'Addresses'
         constraints = [
-            models.UniqueConstraint(fields=['user', 'billing'], name='unique_billing_address')
+            models.UniqueConstraint(
+                fields=['user', 'billing'],
+                condition=models.Q(billing=True),
+                name='unique_billing_address_per_user'
+            )
         ]
 
-    
+    def save(self, *args, **kwargs):
+        if self.billing:
+            # Ensure no other billing address is active for this user
+            self.user.addresses.filter(billing=True).exclude(pk=self.pk).update(billing=False)
+        # Save the instance
+        super().save(*args, **kwargs)
+
+
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -189,7 +247,7 @@ class CustomUser(AbstractUser, PermissionsMixin):
     
     username = None
     email = models.EmailField(unique=True)
-    company_id = models.CharField(max_length=100, blank=True)
+    company_identifier = models.CharField(max_length=100, blank=True)
     company_name = models.CharField(max_length=100, blank=True)
     phone = models.CharField(max_length=15, blank=True)
     verified = models.BooleanField(default=False)
@@ -212,21 +270,30 @@ class CustomUser(AbstractUser, PermissionsMixin):
     
     @property
     def addresses(self):
-        return self.address_set.all()
+        return self.addresses.all()
     
     @property
     def billing_address(self):
-        return self.address_set.filter(billing=True).first()
+        return self.addresses.filter(billing=True).first()
 
     @property
     def full_name(self):
         return self.get_full_name() or self.email
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
         is_new = self._state.adding
         super().save(*args, **kwargs)
         if is_new:
             ShoppingCart.objects.get_or_create(user=self)
+
+    @transaction.atomic
+    def set_inactive(self):
+        self.is_active = False
+        self.save(update_fields=['is_active'])
+        self.shopping_cart.clear()
+        self.save()
+
 
 
     
