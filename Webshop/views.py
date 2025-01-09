@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.db import transaction
 
@@ -84,18 +84,15 @@ class UserView(BaseUserViewSet):
         return "My Profile Detail"
 
 
-
 # 3. Order Management View
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.prefetch_related('orderitem_set__item')
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'head']
 
     filterset_fields = ['order_status', 'order_date', 'order_total']
     ordering_fields = ['order_date', 'order_total', 'order_status']
     ordering = ['-order_date']
-
 
     def get_queryset(self):
         # Return only orders belonging to the logged-in user
@@ -103,7 +100,8 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # Attach the current user to the order during creation
-        serializer.save(user=self.request.user)
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(user=user)
 
     def update(self, request, *args, **kwargs):
         # Prevent updating orders
@@ -112,6 +110,12 @@ class OrderViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         # Prevent deleting orders
         return Response({'error': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def get_permissions(self):
+        # Allow anonymous users to create orders; restrict others to authenticated users
+        if self.action == 'create':
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
 
 # 4. Shopping Cart View
@@ -130,7 +134,6 @@ class ShoppingCartViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_object(self):
         return self.request.user.shopping_cart
-
 
     @action(detail=False, methods=['post'], url_path='set')
     def set_item(self, request, pk=None):
