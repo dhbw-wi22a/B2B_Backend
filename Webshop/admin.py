@@ -14,8 +14,7 @@ class ItemImageInline(admin.TabularInline):  # Inline for Item Images
 class ItemInline(admin.TabularInline):  # Inline for Items
     model = Item
     extra = 1
-    fields = ('item_price',)
-
+    fields = ('item_price','item_stock', 'article_id')
 
 @admin.register(ItemDetails)
 class ItemDetailsAdmin(admin.ModelAdmin):
