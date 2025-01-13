@@ -6,3 +6,4 @@ Pillow
 djangorestframework-simplejwt
 django-filter
 django-ckeditor
+requests

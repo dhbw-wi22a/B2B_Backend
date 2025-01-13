@@ -1,14 +1,16 @@
+from django.core.mail.message import utf8_charset
 from django.http import JsonResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.filters import OrderingFilter
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.viewsets import ViewSet
 
-from .models import Order, Item, CustomUser as User, ShoppingCart, Address
+from .models import Order, Item, CustomUser as User, ShoppingCart, Address, VerificationToken
 from .serializers import OrderSerializer, ItemSerializer, UserRegistrationSerializer, UserSerializer, \
     ShoppingCartSerializer, UserShortSerializer, \
     CartItemSerializer, AddressSerializer
@@ -212,3 +214,20 @@ class ItemViewSet(viewsets.ReadOnlyModelViewSet):
     }
     ordering_fields = ['item_price', 'item_details__item_name']  # Specify sortable fields
     ordering = ['item_price']  # Default ordering
+
+
+# 7. Email Verification
+class EmailVerificationView(ViewSet):
+    @action(detail=False, methods=['get'], url_path='verify/(?P<token>[^/.]+)')
+    def verify_email(self, request, token):
+        try:
+            verification_token = VerificationToken.objects.get(token=token)
+        except VerificationToken.DoesNotExist:
+            return JsonResponse({"message": "Dieser Verifizierungslink wurde bereits verwendet oder ist ungültig."},status=400)
+
+        user = verification_token.user
+        user.verified = True
+        user.save(update_fields=['verified'])
+        verification_token.delete()
+
+        return JsonResponse({"message": "E-Mail erfolgreich bestätigt!"},status=200)

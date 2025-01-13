@@ -13,7 +13,8 @@ from .views import (
     UserView,
     UserShortView,
     ShoppingCartViewSet,
-    AddressViewSet
+    AddressViewSet,
+    EmailVerificationView,
 )
 
 # Register ViewSets with the router
@@ -42,4 +43,5 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),  # Enables login in the DRF UI
     path('auth/', include((auth_patterns, 'auth'), namespace='auth')),  # Grouped auth routes
     path('me/', include(me_router.urls)),  # Group all 'me/' routes under a single prefix
+    path('verify-email/<uuid:token>/', EmailVerificationView.as_view({'get':'verify_email'}), name="verify-email"),
 ]

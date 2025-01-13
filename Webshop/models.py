@@ -1,7 +1,10 @@
+import uuid
+from operator import truediv
 from ckeditor.fields import RichTextField
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, AbstractUser
 from django.db import models, transaction
 from django.utils.translation import gettext_lazy as _
+from utils.mail_service import send_registration_mail
 
 # Constants
 UPLOAD_PATH_ITEM_IMAGES = 'item_images/'
@@ -287,8 +290,19 @@ class CustomUser(AbstractUser, PermissionsMixin):
     def save(self, *args, **kwargs):
         is_new = self._state.adding
         super().save(*args, **kwargs)
+
+        # Log, um zu prüfen, welche Werte vorliegen bei Reg/Update Profile
+        print(f"User {self.email}: is_new={is_new},  verified={self.verified}, firstname={self.first_name}, lastname={self.last_name}")
         if is_new:
             ShoppingCart.objects.get_or_create(user=self)
+
+        if not self.verified and not self.is_staff and self.first_name.strip() and self.last_name.strip():
+            VerificationToken.objects.get_or_create(user=self)
+            send_registration_mail(self)
+
+
+
+
 
     @transaction.atomic
     def set_inactive(self):
@@ -296,3 +310,11 @@ class CustomUser(AbstractUser, PermissionsMixin):
         self.save(update_fields=['is_active'])
         self.shopping_cart.clear()
         self.save()
+
+class VerificationToken(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='verification_token')
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Token for {self.user.email}"
