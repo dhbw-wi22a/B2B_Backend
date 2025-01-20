@@ -20,6 +20,7 @@ django==5.1.4
     #   django-js-asset
     #   djangorestframework
     #   djangorestframework-simplejwt
+    #   drf-yasg
 django-ckeditor==6.7.2
     # via -r requirements.in
 django-filter==24.3
@@ -30,22 +31,35 @@ djangorestframework==3.15.2
     # via
     #   -r requirements.in
     #   djangorestframework-simplejwt
+    #   drf-yasg
 djangorestframework-simplejwt==5.4.0
+    # via -r requirements.in
+drf-yasg==1.21.8
     # via -r requirements.in
 h11==0.14.0
     # via uvicorn
 idna==3.10
     # via requests
+inflection==0.5.1
+    # via drf-yasg
+packaging==24.2
+    # via drf-yasg
 pillow==11.0.0
     # via -r requirements.in
 pyjwt==2.10.1
     # via djangorestframework-simplejwt
 python-dotenv==1.0.1
     # via -r requirements.in
+pytz==2024.2
+    # via drf-yasg
+pyyaml==6.0.2
+    # via drf-yasg
 requests==2.32.3
     # via -r requirements.in
 sqlparse==0.5.2
     # via django
+uritemplate==4.1.1
+    # via drf-yasg
 urllib3==2.3.0
     # via requests
 uvicorn==0.32.1

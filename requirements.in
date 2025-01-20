@@ -7,3 +7,4 @@ djangorestframework-simplejwt
 django-filter
 django-ckeditor
 requests
+drf-yasg
