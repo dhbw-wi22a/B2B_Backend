@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 
 from .models import ItemDetails, ItemImage, Item, OrderInfo, Order, OrderItem, CartItem, Address, \
-    ItemCategory
+    ItemCategory, CompanyGroup, CompanyGroupMembership, GroupInvitation, ShoppingList, ShoppingListItem
 
 
 class ItemImageInline(admin.TabularInline):  # Inline for Item Images
@@ -83,3 +83,52 @@ class UserAdmin(admin.ModelAdmin):
         (None, {'fields': ('email', 'first_name', 'last_name', 'company_name', 'company_identifier')}),
         ('Permissions', {'fields': ('is_staff', 'is_active')}),
     )
+
+
+class CompanyGroupMembershipInline(admin.TabularInline):
+    model = CompanyGroupMembership
+    extra = 1
+    fields = ('user', 'role', 'joined_at')
+    readonly_fields = ('joined_at',)
+
+@admin.register(CompanyGroup)
+class CompanyGroupAdmin(admin.ModelAdmin):
+    list_display = ('name', 'owner')
+    search_fields = ('name', 'owner__email')
+    inlines = [CompanyGroupMembershipInline]
+
+@admin.register(CompanyGroupMembership)
+class CompanyGroupMembershipAdmin(admin.ModelAdmin):
+    list_display = ('user', 'group', 'role', 'joined_at')
+    search_fields = ('user__email', 'group__name')
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if not obj:
+            # New entries should only have the 'member' role
+            form.base_fields['role'].choices = [
+               choice for choice in CompanyGroupMembership._meta.get_field('role').choices if choice[0] == 'member'
+            ]
+        return form
+
+class ShoppingListItemInline(admin.TabularInline):
+    model = ShoppingListItem
+    extra = 1
+    fields = ('item', 'quantity')
+
+@admin.register(ShoppingList)
+class ShoppingListAdmin(admin.ModelAdmin):
+    list_display = ('title', 'group', 'created_by', 'status', 'created_at')
+    search_fields = ('title', 'group__name', 'created_by__email')
+    inlines = [ShoppingListItemInline]
+    list_display = ('title', 'created_by', 'created_at', 'status', 'number_of_items')
+
+    def number_of_items(self, obj):
+        return obj.shopping_list_items.count()
+
+    number_of_items.short_description = 'Anzahl der Artikel'
+
+@admin.register(GroupInvitation)
+class GroupInvitationAdmin(admin.ModelAdmin):
+    list_display = ('email', 'group', 'invited_by', 'status', 'created_at')
+    search_fields = ('email', 'group__name', 'invited_by__email')

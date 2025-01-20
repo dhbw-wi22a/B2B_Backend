@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .models import Item, Order, OrderInfo, OrderItem, ItemImage, ItemDetails, CustomUser, Address, ShoppingCart, \
-    CartItem
+    CartItem, CompanyGroup, CompanyGroupMembership, GroupInvitation, ShoppingList, ShoppingListItem
 
 
 class ItemImageSerializer(serializers.ModelSerializer):
@@ -221,3 +221,82 @@ class UserOrdersSerializer(serializers.ModelSerializer):
             'email': {'read_only': True},
             'orders': {'read_only': True},
         }
+
+
+
+class CompanyGroupMembershipSerializer(serializers.ModelSerializer):
+    user = UserShortSerializer(read_only=True)
+    class Meta:
+        model = CompanyGroupMembership
+        fields = ['user', 'group', 'role', 'joined_at']
+        read_only_fields = ['joined_at']
+        extra_kwargs = {
+            'group': {'read_only': True},
+        }
+
+class CompanyGroupSerializer(serializers.ModelSerializer):
+    members = CompanyGroupMembershipSerializer(many=True, read_only=True)
+    class Meta:
+        model = CompanyGroup
+        fields = ['id', 'name', 'owner', 'members']
+        read_only_fields = ['id', 'owner']
+
+        extra_kwargs = {
+            'owner': {'read_only': True},
+        }
+
+class GroupInvitationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupInvitation
+        fields = ['id', 'email', 'group', 'invited_by', 'status', 'created_at']
+        read_only_fields = ['id', 'invited_by', 'created_at']
+
+
+class ShoppingListItemsSerializer(serializers.ModelSerializer):
+    item = ItemSerializer(read_only=True)
+    item_id = serializers.PrimaryKeyRelatedField(queryset=Item.objects.all(), write_only=True, source='item')
+
+    class Meta:
+        model = ShoppingListItem
+        fields = ['id', 'shopping_list', 'item', 'item_id', 'quantity']
+        read_only_fields = ['id', 'shopping_list']
+        extra_kwargs = {
+            'shopping_list': {'required': True},
+            'item': {'required': True},
+            'quantity': {'required': True, 'min_value': 1},
+        }
+
+class ShoppingListSerializer(serializers.ModelSerializer):
+    items = ShoppingListItemsSerializer(source='shopping_list_items', many=True, read_only=True)
+    items_data = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False
+    )
+
+    class Meta:
+        model = ShoppingList
+        fields = ['id', 'title', 'group', 'created_at', 'created_by', 'items', 'items_data', 'status', 'is_personal']
+        read_only_fields = ['id', 'created_at', 'created_by']
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items_data', [])
+        shopping_list = super().create(validated_data)
+
+        for item_data in items_data:
+            ShoppingListItem.objects.create(shopping_list=shopping_list, **item_data)
+
+        return shopping_list
+
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items_data', [])
+        shopping_list = super().update(instance, validated_data)
+
+        shopping_list.shopping_list_items.all().delete()
+        for item_data in items_data:
+            ShoppingListItem.objects.create(
+                shopping_list=shopping_list,
+                item_id=item_data['item_id'],
+                quantity=item_data.get('quantity', 1)
+            )
+        return shopping_list

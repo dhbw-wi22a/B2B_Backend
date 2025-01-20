@@ -1,10 +1,11 @@
 import uuid
 from operator import truediv
 from ckeditor.fields import RichTextField
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, AbstractUser
 from django.db import models, transaction
 from django.utils.translation import gettext_lazy as _
-from utils.mail_service import send_registration_mail
+from utils.mail_service import send_registration_mail, send_group_invitation_mail
 
 # Constants
 UPLOAD_PATH_ITEM_IMAGES = 'item_images/'
@@ -291,17 +292,12 @@ class CustomUser(AbstractUser, PermissionsMixin):
         is_new = self._state.adding
         super().save(*args, **kwargs)
 
-        # Log, um zu prüfen, welche Werte vorliegen bei Reg/Update Profile
-        print(f"User {self.email}: is_new={is_new},  verified={self.verified}, firstname={self.first_name}, lastname={self.last_name}")
         if is_new:
             ShoppingCart.objects.get_or_create(user=self)
 
         if not self.verified and not self.is_staff and self.first_name.strip() and self.last_name.strip():
             VerificationToken.objects.get_or_create(user=self)
             send_registration_mail(self)
-
-
-
 
 
     @transaction.atomic
@@ -318,3 +314,112 @@ class VerificationToken(models.Model):
 
     def __str__(self):
         return f"Token for {self.user.email}"
+
+
+User = get_user_model()
+
+class CompanyGroup(models.Model):
+    name = models.CharField(max_length=150, unique=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_groups')
+    members = models.ManyToManyField(User, related_name='member_groups',through='CompanyGroupMembership')
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        is_new = self._state.adding
+        super().save(*args, **kwargs)
+        if is_new:
+            CompanyGroupMembership.objects.get_or_create(user=self.owner, group=self, role=CompanyGroupRole.OWNER)
+
+class CompanyGroupRole(models.TextChoices):
+    OWNER = 'owner', _('Owner')
+    MEMBER = 'member', _('Member')
+
+class CompanyGroupMembership(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(CompanyGroup, on_delete=models.CASCADE)
+    joined_at = models.DateTimeField(auto_now_add=True)
+    role = models.CharField(
+        max_length=20,
+        choices=CompanyGroupRole.choices,
+        default=CompanyGroupRole.MEMBER
+    )
+
+    def __str__(self):
+        return f"{self.user.email} in {self.group.name} as {self.get_role_display()}"
+
+
+class ShoppingListItem(models.Model):
+    shopping_list = models.ForeignKey('ShoppingList', on_delete=models.CASCADE, related_name='shopping_list_items')
+    item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name='shopping_list_items')
+    quantity = models.PositiveIntegerField(default=1)  # Default Qty is 1
+
+    def __str__(self):
+        return f"{self.item} in {self.shopping_list}"
+
+
+class ShoppingListStatus(models.TextChoices):
+    DRAFT = 'draft', _('Draft')
+    SUBMITTED = 'submitted', _('Submitted')
+    APPROVED = 'approved', _('Approved')
+    REJECTED = 'rejected', _('Rejected')
+
+class ShoppingList(models.Model):
+    title = models.CharField(max_length=150)
+    group = models.ForeignKey(
+        CompanyGroup,
+        on_delete=models.CASCADE,
+        related_name='shopping_lists',
+        null=True,  # Optional für persönliche Listen
+        blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    items = models.ManyToManyField(Item, through='ShoppingListItem', related_name='shopping_lists')
+    status = models.CharField(
+        max_length=20,
+        choices=ShoppingListStatus.choices,
+        default=ShoppingListStatus.DRAFT
+    )
+    is_personal = models.BooleanField(default=False)  # Neues Feld
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(group__isnull=True, is_personal=True) | models.Q(group__isnull=False, is_personal=False),
+                name="personal_or_group_list_constraint"
+            )
+        ]
+
+class GroupInvitationStatus(models.TextChoices):
+    PENDING = 'pending', _('Pending')
+    ACCEPTED = 'accepted', _('Accepted')
+    DECLINED = 'declined', _('Declined')
+
+class GroupInvitation(models.Model):
+    email = models.EmailField()
+    group = models.ForeignKey(CompanyGroup, on_delete=models.CASCADE, related_name='invitations')
+    invited_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    status = models.CharField(
+        max_length=20,
+        choices=GroupInvitationStatus.choices,
+        default=GroupInvitationStatus.PENDING
+    )
+    group_invite_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Invitation for {self.email} to {self.group.name}"
+
+    def save(self, *args, **kwargs):
+        is_new = self._state.adding
+        super().save(*args, **kwargs)
+        if is_new:
+            self.send_invitation_email()
+
+    def send_invitation_email(self):
+        send_group_invitation_mail(invitation=self)
