@@ -223,7 +223,6 @@ class UserOrdersSerializer(serializers.ModelSerializer):
         }
 
 
-
 class CompanyGroupMembershipSerializer(serializers.ModelSerializer):
     user = UserShortSerializer(read_only=True)
     class Meta:
@@ -233,6 +232,7 @@ class CompanyGroupMembershipSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'group': {'read_only': True},
         }
+
 
 class CompanyGroupSerializer(serializers.ModelSerializer):
     members = CompanyGroupMembershipSerializer(many=True, read_only=True)
@@ -248,8 +248,8 @@ class CompanyGroupSerializer(serializers.ModelSerializer):
 class GroupInvitationSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupInvitation
-        fields = ['id', 'email', 'group', 'invited_by', 'status', 'created_at']
-        read_only_fields = ['id', 'invited_by', 'created_at']
+        fields = ['id', 'email', 'group', 'invited_by', 'status', 'group_invite_token', 'created_at']
+        read_only_fields = ['id', 'invited_by', 'status', 'group_invite_token', 'created_at']
 
 
 class ShoppingListItemsSerializer(serializers.ModelSerializer):

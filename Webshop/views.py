@@ -1,7 +1,20 @@
+from django.contrib.auth import get_user_model, login
+from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView, PasswordResetDoneView, \
+    INTERNAL_RESET_SESSION_TOKEN
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail.message import utf8_charset
 from django.db import models
 from django.db.models import Q
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.shortcuts import redirect
+from django.utils.decorators import method_decorator
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.debug import sensitive_post_parameters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
@@ -13,7 +26,9 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from rest_framework.permissions import IsAuthenticated
 
-from utils.mail_service import send_group_invitation_mail
+
+
+from utils.mail_service import send_group_invitation_mail, send_password_reset_mail
 from .models import Order, Item, CustomUser as User, ShoppingCart, Address, VerificationToken, CompanyGroup, CompanyGroupMembership, CompanyGroupRole, GroupInvitation, ShoppingList, ShoppingListItem, GroupInvitationStatus
 from .serializers import OrderSerializer, ItemSerializer, UserRegistrationSerializer, UserSerializer, \
     ShoppingCartSerializer, UserShortSerializer, \
@@ -463,3 +478,25 @@ class ShoppingListViewSet(viewsets.ModelViewSet):
 
 # @TODO: Implement the following views, maybe combine with frontend view?:
 # 12. User Registration with Invitation View
+
+
+# 13. CustomViews for password reset process
+class CustomPasswordResetView(PasswordResetView):
+    template_name = "password_reset_form.html"
+    success_url = '/web/api/selfservice/password-reset/done/'
+    def form_valid(self, form):
+        """
+        Override form_valid to handle email-based password reset securely.
+        """
+        email = form.cleaned_data.get('email')
+        # Check if email exists in the database
+        users = User.objects.filter(email=email)
+        if users.exists():
+            for user in users:
+                # Generate a password reset token
+                token = default_token_generator.make_token(user)
+                # Generate uid
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                # Call the mail service to send email
+                send_password_reset_mail(user, token, uid)
+        return redirect(self.success_url)

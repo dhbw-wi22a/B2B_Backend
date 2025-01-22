@@ -1,5 +1,5 @@
 import uuid
-from operator import truediv
+from datetime import timedelta, datetime
 from ckeditor.fields import RichTextField
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, AbstractUser
@@ -306,6 +306,7 @@ class CustomUser(AbstractUser, PermissionsMixin):
         self.save(update_fields=['is_active'])
         self.shopping_cart.clear()
         self.save()
+
 
 class VerificationToken(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='verification_token')
