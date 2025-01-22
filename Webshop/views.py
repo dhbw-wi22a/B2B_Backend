@@ -66,6 +66,14 @@ class BaseUserViewSet(viewsets.ModelViewSet):
         self.perform_update(serializer)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['delete'], url_path='delete')
+    def delete_user(self, request, pk=None):
+        """
+        Deactivate the user's profile.
+        """
+        user = self.get_object()
+        self.perform_destroy(user)
+        return Response({'status': 'User set successfully. to inactive.'},status=status.HTTP_204_NO_CONTENT)
 
 class UserShortView(BaseUserViewSet):
     serializer_class = UserShortSerializer
