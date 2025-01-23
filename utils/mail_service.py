@@ -16,6 +16,7 @@ MAILSERVICE_REGISTRATION_ENDPOINT = os.getenv('MAILSERVICE_REGISTRATION_ENDPOINT
 MAILSERVICE_GROUP_INVITATION_ENDPOINT = os.getenv('MAILSERVICE_GROUP_INVITATION_ENDPOINT')
 MAILSERVICE_ORDER_CONFIRMATION_ENDPOINT = os.getenv('MAILSERVICE_ORDER_CONFIRMATION_ENDPOINT')
 MAILSERVICE_PASSWORD_RESET_ENDPOINT = os.getenv('MAILSERVICE_PASSWORD_RESET_ENDPOINT')
+MAILSERVICE_ACCOUNT_INACTIVE_ENDPOINT=os.getenv('MAILSERVICE_ACCOUNT_INACTIVE_ENDPOINT')
 SHOP_BASE_URL = os.getenv('SHOP_BASE_URL')
 
 headers = {'Content-Type': 'application/json'}
@@ -115,6 +116,34 @@ def send_group_invitation_mail(invitation):
         logger.error(f"Error sending group invitation email: {e}")
         return None
 
+
+def send_inactive_mail(user):
+    """
+     Send an email for successfully account deactivation.
+    """
+    inactive_url = f"{MAILSERVICE_BASE_URL}/{MAILSERVICE_ACCOUNT_INACTIVE_ENDPOINT}"
+
+    payload = {
+        "recipients": [
+            {
+                "email": user.email,
+                "fname": user.first_name,
+                "lname": user.last_name
+            }
+        ]
+    }
+
+    try:
+        response = requests.post(
+                inactive_url,
+                headers=headers,
+                json=payload)
+
+        response.raise_for_status()
+        logger.info("Email sent successfully")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error sending email: {e}")
+        return None
 
 
 def send_order_conf_mail():

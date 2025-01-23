@@ -28,7 +28,7 @@ from rest_framework.permissions import IsAuthenticated
 
 
 
-from utils.mail_service import send_group_invitation_mail, send_password_reset_mail
+from utils.mail_service import send_group_invitation_mail, send_password_reset_mail, send_inactive_mail
 from .models import Order, Item, CustomUser as User, ShoppingCart, Address, VerificationToken, CompanyGroup, CompanyGroupMembership, CompanyGroupRole, GroupInvitation, ShoppingList, ShoppingListItem, GroupInvitationStatus
 from .serializers import OrderSerializer, ItemSerializer, UserRegistrationSerializer, UserSerializer, \
     ShoppingCartSerializer, UserShortSerializer, \
@@ -88,6 +88,7 @@ class BaseUserViewSet(viewsets.ModelViewSet):
         """
         user = self.get_object()
         self.perform_destroy(user)
+        send_inactive_mail(user)
         return Response({'status': 'User set successfully. to inactive.'},status=status.HTTP_204_NO_CONTENT)
 
 class UserShortView(BaseUserViewSet):
