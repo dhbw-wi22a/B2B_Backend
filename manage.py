@@ -32,23 +32,23 @@ def main():
 
 def create_default_admin():
     """Create a default superuser if it doesn't already exist."""
-    from django.contrib.auth.models import User
-    from django.conf import settings
+    from django.contrib.auth import get_user_model
+
+    # Get the project user model
+    User = get_user_model()
 
     # Read admin credentials from environment variables (with fallback defaults)
-    admin_username = os.environ.get('DJANGO_ADMIN_USERNAME', 'admin')
     admin_email = os.environ.get('DJANGO_ADMIN_EMAIL', 'admin@example.com')
     admin_password = os.environ.get('DJANGO_ADMIN_PASSWORD', 'admin')
 
-    if not User.objects.filter(username=admin_username).exists():
-        print(f"Creating default admin user: {admin_username}")
+    if not User.objects.filter(email=admin_email).exists():
+        print(f"Creating default admin user: {admin_email}")
         User.objects.create_superuser(
-            username=admin_username,
             email=admin_email,
             password=admin_password
         )
     else:
-        print(f"Default admin user '{admin_username}' already exists.")
+        print(f"Default admin user '{admin_email}' already exists.")
 
 
 if __name__ == '__main__':

@@ -21,11 +21,9 @@ from Webshop.views import default_view
 
 url_prefix = 'web'
 
+# URL patterns for the project
 urlpatterns = [
     path(f'{url_prefix}/', default_view),
     path(f'{url_prefix}/admin/', admin.site.urls),
     path(f'{url_prefix}/api/', include('Webshop.urls')),  # Include app's URLs under /api/
-
-
 ]
-

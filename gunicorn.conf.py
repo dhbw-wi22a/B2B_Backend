@@ -1,6 +1,6 @@
 # Logging
 accesslog = "-"  # Logs to stdout
-errorlog = "-"   # Logs to stderr
+errorlog = "-"  # Logs to stderr
 loglevel = "debug"
 
 # Logging format
