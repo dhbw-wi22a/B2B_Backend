@@ -3,4 +3,8 @@ djangorestframework
 python-dotenv
 uvicorn
 Pillow
-psycopg2-binary
+djangorestframework-simplejwt
+django-filter
+django-ckeditor
+requests
+drf-yasg
