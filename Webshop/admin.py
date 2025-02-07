@@ -1,6 +1,9 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.shortcuts import redirect, render
 from django.contrib.auth import get_user_model
+from rest_framework.exceptions import ValidationError
 
+from utils.product_upload import process_product_upload
 from .models import ItemDetails, ItemImage, Item, OrderInfo, Order, OrderItem, CartItem, Address, \
     ItemCategory, CompanyGroup, CompanyGroupMembership, GroupInvitation, ShoppingList, ShoppingListItem
 
@@ -23,6 +26,39 @@ class ItemDetailsAdmin(admin.ModelAdmin):
     search_fields = ('item_name', 'item_description', 'items__article_id')
     ordering = ('item_name',)
 
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('upload-csv/', self.admin_site.admin_view(self.upload_csv), name='itemdetails_upload_csv'),
+        ]
+        return custom_urls + urls
+
+    def upload_csv(self, request):
+        """CSV-Upload für Produkte über das Admin-Panel."""
+        if request.method == "POST":
+            csv_file = request.FILES.get("csv_file")
+
+            if not csv_file:
+                messages.error(request, "Keine Datei hochgeladen!")
+                return redirect("admin:itemdetails_upload_csv")
+
+            try:
+                process_product_upload(csv_file)  # CSV-Datei verarbeiten
+                messages.success(request, "Produkte erfolgreich hochgeladen!")
+                return redirect("admin:Webshop_itemdetails_changelist")
+
+            except ValidationError as e:
+                messages.error(request, f"Fehler beim Upload: {e}")
+            except Exception as e:
+                messages.error(request, f"Unerwarteter Fehler: {e}")
+
+        return render(request, "admin/csv_upload.html", {"title": "CSV-Upload"})
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['upload_form'] = True
+        return super().changelist_view(request, extra_context)
 
 @admin.register(ItemCategory)
 class ItemCategoryAdmin(admin.ModelAdmin):

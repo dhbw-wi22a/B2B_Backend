@@ -1,0 +1,140 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<style>
+    .upload-container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h2,p {
+        text-align: center;
+        color: #ffffff;
+    }
+    .info-box {
+        background: #883b02;
+        padding: 10px;
+        border-left: 5px solid #ffd900;
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
+    .file-upload {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    input[type="file"] {
+        margin-bottom: 10px;
+    }
+    .upload-button {
+        background: #4e4b4b;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.3s;
+    }
+    .upload-button:hover {
+        background: #b3920f;
+    }
+    .csv-format {
+        margin-top: 20px;
+        font-size: 14px;
+    }
+    .csv-format pre {
+        background: #f4f4f4;
+        padding: 10px;
+        border-radius: 5px;
+        overflow-x: auto;
+    }
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #007bff;
+        font-weight: bold;
+    }
+    .back-link:hover {
+        text-decoration: underline;
+    }
+    .csv-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    color: white;
+}
+
+.csv-table th, .csv-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.csv-table th {
+    background-color: #404040;
+    color: white;
+    font-weight: bold;
+}
+</style>
+
+<div class="upload-container">
+    <h2>Bulk Product Upload</h2>
+    <p>Bitte lade die zu importierenden Produkte im <strong>.csv-Format</strong> hoch.</p>
+
+    <div class="info-box">
+        <strong>Wichtige Hinweise:</strong>
+        <ul>
+            <li>Die CSV-Datei muss UTF-8 kodiert sein. Separiert mit Semikolon (;).</li>
+            <li>Die erste Zeile muss die folgenden Spaltenüberschriften enthalten:</li>
+            <li>Produktfotos müssen derzeit noch im Nachgang manuell hinzugefügt werden.</li>
+        </ul>
+    </div>
+
+    <div class="csv-format">
+    <strong>Erwartetes CSV-Format:</strong>
+    <table class="csv-table">
+        <thead>
+            <tr>
+                <th>article_id</th>
+                <th>item_name</th>
+                <th>category_name</th>
+                <th>item_price</th>
+                <th>item_description</th>
+                <th>item_stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>P001</td>
+                <td>Dell Latitude 5420</td>
+                <td>Laptop</td>
+                <td>1199.99</td>
+                <td>Ein leistungsstarkes Business-Notebook....</td>
+                <td>20</td>
+            </tr>
+            <tr>
+                <td>P002</td>
+                <td>HP EliteBook 850 G7</td>
+                <td>Laptop</td>
+                <td>1349.99</td>
+                <td>Ultraschlankes Notebook mit starker Performance....</td>
+                <td>15</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<br>
+    <form method="post" enctype="multipart/form-data" class="file-upload">
+        {% csrf_token %}
+        <input type="file" name="csv_file" accept=".csv" required>
+        <button type="submit" class="upload-button">Absenden</button>
+    </form>
+
+    <a href="{% url 'admin:Webshop_itemdetails_changelist' %}" class="back-link">Zurück zur Übersicht</a>
+</div>
+
+{% endblock %}

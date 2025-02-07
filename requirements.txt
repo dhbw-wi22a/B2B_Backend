@@ -8,6 +8,8 @@ asgiref==3.8.1
     # via django
 certifi==2024.12.14
     # via requests
+chardet==5.2.0
+    # via -r requirements.in
 charset-normalizer==3.4.1
     # via requests
 click==8.1.7
@@ -42,22 +44,34 @@ idna==3.10
     # via requests
 inflection==0.5.1
     # via drf-yasg
+numpy==2.2.2
+    # via pandas
 packaging==24.2
     # via drf-yasg
+pandas==2.2.3
+    # via -r requirements.in
 pillow==11.0.0
     # via -r requirements.in
 pyjwt==2.10.1
     # via djangorestframework-simplejwt
+python-dateutil==2.9.0.post0
+    # via pandas
 python-dotenv==1.0.1
     # via -r requirements.in
 pytz==2024.2
-    # via drf-yasg
+    # via
+    #   drf-yasg
+    #   pandas
 pyyaml==6.0.2
     # via drf-yasg
 requests==2.32.3
     # via -r requirements.in
+six==1.17.0
+    # via python-dateutil
 sqlparse==0.5.2
     # via django
+tzdata==2025.1
+    # via pandas
 uritemplate==4.1.1
     # via drf-yasg
 urllib3==2.3.0
